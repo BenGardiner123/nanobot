@@ -12,12 +12,25 @@ export NANOBOT_GATEWAY__PORT="${NANOBOT_GATEWAY__PORT:-${PORT:-18790}}"
 
 if [ ! -f "$CONFIG_FILE" ]; then
   PROVIDER="${NANOBOT_PROVIDER:-openrouter}"
-  API_KEY="${NANOBOT_API_KEY:-${OPENAI_API_KEY:-}}"
   API_BASE="${NANOBOT_API_BASE:-${OPENAI_API_BASE:-}}"
   DEFAULT_MODEL="${NANOBOT_DEFAULT_MODEL:-anthropic/claude-sonnet-4}"
 
+    API_KEY="${NANOBOT_API_KEY:-}"
+    if [ -z "$API_KEY" ]; then
+        case "$PROVIDER" in
+            openrouter) API_KEY="${OPENROUTER_API_KEY:-}" ;;
+            anthropic) API_KEY="${ANTHROPIC_API_KEY:-}" ;;
+            deepseek) API_KEY="${DEEPSEEK_API_KEY:-}" ;;
+            zhipu) API_KEY="${ZHIPU_API_KEY:-}" ;;
+            gemini) API_KEY="${GEMINI_API_KEY:-}" ;;
+            groq) API_KEY="${GROQ_API_KEY:-}" ;;
+            openai|azure_openai) API_KEY="${OPENAI_API_KEY:-}" ;;
+            *) API_KEY="${OPENAI_API_KEY:-}" ;;
+        esac
+    fi
+
   if [ -z "$API_KEY" ]; then
-    echo "NANOBOT_API_KEY (or OPENAI_API_KEY) is required for first boot." >&2
+        echo "Missing API key for provider '$PROVIDER'. Set NANOBOT_API_KEY or provider key (OPENROUTER_API_KEY, ANTHROPIC_API_KEY, OPENAI_API_KEY, etc.)." >&2
     exit 1
   fi
 
