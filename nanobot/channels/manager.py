@@ -74,14 +74,10 @@ class ChannelManager:
         transcription_language = self.config.channels.transcription_language
 
         for name, cls in discover_all().items():
-            section = getattr(self.config.channels, name, None)
+            section = self._get_channel_section(name)
             if section is None:
                 continue
-            enabled = (
-                section.get("enabled", False)
-                if isinstance(section, dict)
-                else getattr(section, "enabled", False)
-            )
+            enabled = self._is_section_enabled(section)
             if not enabled:
                 continue
             try:
@@ -110,6 +106,40 @@ class ChannelManager:
                 logger.warning("{} channel not available: {}", name, e)
 
         self._validate_allow_from()
+
+    def _get_channel_section(self, name: str) -> Any:
+        """Return channel section by name, including case-insensitive extra-field lookup."""
+        section = getattr(self.config.channels, name, None)
+        if section is not None:
+            return section
+
+        extra = getattr(self.config.channels, "model_extra", None) or {}
+        for key, value in extra.items():
+            if str(key).lower() == name.lower():
+                return value
+        return None
+
+    @staticmethod
+    def _is_section_enabled(section: Any) -> bool:
+        """Interpret channel enabled flag from dict/model values and common string forms."""
+        if isinstance(section, dict):
+            value = None
+            for key in ("enabled", "Enabled", "ENABLED"):
+                if key in section:
+                    value = section.get(key)
+                    break
+            if isinstance(value, bool):
+                return value
+            if isinstance(value, str):
+                return value.strip().lower() in {"1", "true", "yes", "on"}
+            return False
+
+        value = getattr(section, "enabled", False)
+        if isinstance(value, bool):
+            return value
+        if isinstance(value, str):
+            return value.strip().lower() in {"1", "true", "yes", "on"}
+        return False
 
     def _resolve_transcription_key(self, provider: str) -> str:
         """Pick the API key for the configured transcription provider."""
