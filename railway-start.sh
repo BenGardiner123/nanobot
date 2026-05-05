@@ -10,7 +10,7 @@ mkdir -p "$CONFIG_DIR"
 export NANOBOT_GATEWAY__HOST="${NANOBOT_GATEWAY__HOST:-0.0.0.0}"
 export NANOBOT_GATEWAY__PORT="${NANOBOT_GATEWAY__PORT:-${PORT:-18790}}"
 
-if [ ! -f "$CONFIG_FILE" ]; then
+if true; then  # always regenerate on Railway
   PROVIDER="${NANOBOT_PROVIDER:-openrouter}"
   API_BASE="${NANOBOT_API_BASE:-${OPENAI_API_BASE:-}}"
   DEFAULT_MODEL="${NANOBOT_DEFAULT_MODEL:-anthropic/claude-sonnet-4}"
