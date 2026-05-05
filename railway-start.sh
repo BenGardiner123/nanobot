@@ -34,27 +34,35 @@ if [ ! -f "$CONFIG_FILE" ]; then
     exit 1
   fi
 
-  python - "$CONFIG_FILE" "$PROVIDER" "$API_KEY" "$API_BASE" "$DEFAULT_MODEL" <<'PY'
-import json
-import sys
+  SLACK_BOT_TOKEN="${SLACK_BOT_TOKEN:-}"
+  SLACK_APP_TOKEN="${SLACK_APP_TOKEN:-}"
+  SLACK_ALLOW_FROM="${SLACK_ALLOW_FROM:-*}"
 
-config_file, provider, api_key, api_base, default_model = sys.argv[1:]
+  python - "$CONFIG_FILE" "$PROVIDER" "$API_KEY" "$API_BASE" "$DEFAULT_MODEL" \
+    "$SLACK_BOT_TOKEN" "$SLACK_APP_TOKEN" "$SLACK_ALLOW_FROM" <<'PY'
+import json, sys
+
+config_file, provider, api_key, api_base, default_model, \
+    slack_bot_token, slack_app_token, slack_allow_from = sys.argv[1:]
 
 provider_cfg = {"apiKey": api_key}
 if api_base:
     provider_cfg["apiBase"] = api_base
 
 config = {
-    "providers": {
-        provider: provider_cfg,
-    },
-    "agents": {
-        "defaults": {
-            "provider": provider,
-            "model": default_model,
-        }
-    },
+    "providers": {provider: provider_cfg},
+    "agents": {"defaults": {"provider": provider, "model": default_model}},
 }
+
+if slack_bot_token and slack_app_token:
+    config["channels"] = {
+        "slack": {
+            "enabled": True,
+            "botToken": slack_bot_token,
+            "appToken": slack_app_token,
+            "allowFrom": [s.strip() for s in slack_allow_from.split(",")],
+        }
+    }
 
 with open(config_file, "w", encoding="utf-8") as f:
     json.dump(config, f, indent=2)
