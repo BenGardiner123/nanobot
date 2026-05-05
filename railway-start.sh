@@ -35,7 +35,7 @@ if true; then  # always regenerate on Railway
   fi
 
     python - "$CONFIG_FILE" "$PROVIDER" "$API_KEY" "$API_BASE" "$DEFAULT_MODEL" <<'PY'
-import json, sys
+import json, os, sys
 
 config_file, provider, api_key, api_base, default_model = sys.argv[1:]
 
@@ -52,6 +52,9 @@ with open(config_file, "w", encoding="utf-8") as f:
     json.dump(config, f, indent=2)
 
 print(f"Generated {config_file}")
+print(f"NANOBOT_CHANNELS__SLACK__ENABLED set: {bool(os.environ.get('NANOBOT_CHANNELS__SLACK__ENABLED'))}")
+print(f"NANOBOT_CHANNELS__SLACK__BOT_TOKEN set: {bool(os.environ.get('NANOBOT_CHANNELS__SLACK__BOT_TOKEN'))}")
+print(f"NANOBOT_CHANNELS__SLACK__APP_TOKEN set: {bool(os.environ.get('NANOBOT_CHANNELS__SLACK__APP_TOKEN'))}")
 PY
 fi
 
