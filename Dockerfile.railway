@@ -1,0 +1,11 @@
+FROM ghcr.io/hkuds/nanobot:latest
+
+COPY --chown=nanobot:nanobot railway-start.sh /usr/local/bin/railway-start.sh
+RUN sed -i 's/\r$//' /usr/local/bin/railway-start.sh && chmod +x /usr/local/bin/railway-start.sh
+
+USER nanobot
+ENV HOME=/home/nanobot
+
+EXPOSE 18790
+
+ENTRYPOINT ["/usr/local/bin/railway-start.sh"]

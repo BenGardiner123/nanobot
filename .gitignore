@@ -3,6 +3,7 @@
 .assets
 .docs
 .env
+.nanobot/
 .web
 .orion
 
