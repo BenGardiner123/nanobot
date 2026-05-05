@@ -7,7 +7,7 @@ from typing import Any
 
 import httpx
 from loguru import logger
-from pydantic import Field
+from pydantic import Field, field_validator
 from slack_sdk.socket_mode.request import SocketModeRequest
 from slack_sdk.socket_mode.response import SocketModeResponse
 from slack_sdk.socket_mode.websockets import SocketModeClient
@@ -22,12 +22,32 @@ from nanobot.config.schema import Base
 from nanobot.utils.helpers import safe_filename, split_message
 
 
+def _normalize_allow_list(value: Any) -> list[str]:
+    if value is None:
+        return []
+    if isinstance(value, list):
+        return [str(v) for v in value]
+    if isinstance(value, dict):
+        # pydantic-settings may represent indexed env vars as {"0": "..."}.
+        try:
+            pairs = sorted(value.items(), key=lambda kv: int(str(kv[0])))
+        except (TypeError, ValueError):
+            pairs = value.items()
+        return [str(v) for _, v in pairs]
+    return [str(value)]
+
+
 class SlackDMConfig(Base):
     """Slack DM policy configuration."""
 
     enabled: bool = True
     policy: str = "open"
     allow_from: list[str] = Field(default_factory=list)
+
+    @field_validator("allow_from", mode="before")
+    @classmethod
+    def _normalize_allow_from(cls, value: Any) -> list[str]:
+        return _normalize_allow_list(value)
 
 
 class SlackConfig(Base):
@@ -48,6 +68,11 @@ class SlackConfig(Base):
     group_policy: str = "mention"
     group_allow_from: list[str] = Field(default_factory=list)
     dm: SlackDMConfig = Field(default_factory=SlackDMConfig)
+
+    @field_validator("allow_from", "group_allow_from", mode="before")
+    @classmethod
+    def _normalize_list_fields(cls, value: Any) -> list[str]:
+        return _normalize_allow_list(value)
 
 
 SLACK_MAX_MESSAGE_LEN = 39_000  # Slack API allows ~40k; leave margin
