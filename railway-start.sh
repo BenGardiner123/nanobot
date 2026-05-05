@@ -68,6 +68,9 @@ with open(config_file, "w", encoding="utf-8") as f:
     json.dump(config, f, indent=2)
 
 print(f"Generated {config_file}")
+print(f"Slack enabled: {'channels' in config and 'slack' in config.get('channels', {})}")
+print(f"SLACK_BOT_TOKEN set: {bool(slack_bot_token)}")
+print(f"SLACK_APP_TOKEN set: {bool(slack_app_token)}")
 PY
 fi
 
